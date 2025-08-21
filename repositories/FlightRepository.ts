@@ -6,13 +6,6 @@ import OrigenDestinoResponse from '../mocks/OrigenDestinoResponse.json';
 
 const FLIGHT_NOT_FOUND: FlightModel[] = [];
 
-export interface FlightSearchParams {
-	flightNumber?: string;
-	departureAirport?: string;
-	arrivalAirport?: string;
-	date?: string;
-}
-
 export interface IFlightRepository {
 	trackFlight(flightNumber: string, date: string): Promise<FlightModel[]>;
 	getFlightDestinations(
@@ -34,18 +27,22 @@ export class FlightRepository implements IFlightRepository {
 		date: string,
 	): Promise<FlightModel[]> {
 		try {
+			await this.simulateNetworkDelay();
+
 			const mockFlights = NumeroDeVueloResponse.flightStatusCollection;
-			const flights = mockFlights.filter((flight: Flight) => {
+			const flights = mockFlights.filter((flight: Partial<Flight>) => {
 				const flightCode =
-					flight.segment.marketingFlightCode ||
-					flight.segment.operatingFlightCode;
-				const flightDate = flight.segment.departureDateTime.split('T')[0];
+					flight.segment?.marketingFlightCode ||
+					flight.segment?.operatingFlightCode;
+				const flightDate = flight.segment?.departureDateTime.split('T')[0];
 				const normalizedDate = date.split('T')[0];
 
 				return flightCode === flightNumber && flightDate === normalizedDate;
 			});
 
-			return flights.map((flight: Flight) => new FlightModel(flight));
+			return flights.map(
+				(flight: Partial<Flight>) => new FlightModel(flight),
+			);
 		} catch {
 			return FLIGHT_NOT_FOUND;
 		}
@@ -57,13 +54,25 @@ export class FlightRepository implements IFlightRepository {
 		date: string,
 	): Promise<FlightModel[]> {
 		try {
+			await this.simulateNetworkDelay();
+
 			const mockFlights = OrigenDestinoResponse.flightStatusCollection;
 
 			if (!mockFlights) return FLIGHT_NOT_FOUND;
 
-			return mockFlights.map((flight: Flight) => new FlightModel(flight));
+			return mockFlights.map(
+				(flight: Partial<Flight>) => new FlightModel(flight),
+			);
 		} catch {
 			return FLIGHT_NOT_FOUND;
 		}
+	}
+
+	private async simulateNetworkDelay(ms: number = 800): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
+	}
+
+	static getCacheKey(method: string, ...params: any[]): string[] {
+		return [method, ...params.map((p) => String(p))];
 	}
 }

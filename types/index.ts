@@ -46,6 +46,55 @@ export enum FlightStatus {
 	ARRIVED = 'ARRIVED',
 }
 
-export interface ApiResponse {
-	flightStatusCollection: FlightStatus[];
+interface FlightViewModel {
+	id: string;
+	favorite: boolean;
+	departureAirport: string;
+	arrivalAirport: string;
+	arrivalGate: string;
+	arrivalTerminal: string;
+	boardingTerminal: string;
+	boardingTime: string;
+	route: string;
+	status: string;
+	statusText: string;
+	durationInHours: string;
+	formattedTime: string;
+	operatingAndCode: string;
+}
+interface SelectedFlightData {
+	id: string;
+	favorite: boolean;
+	departureAirport: string;
+	arrivalAirport: string;
+	arrivalGate: string;
+	status: string;
+	arrivalTerminal: string;
+	boardingTerminal: string;
+	boardingTime: string;
+	route: string;
+	statusText: string;
+	durationInHours: string;
+	formattedTime: string;
+	operatingAndCode: string;
+	flightNumber: string;
+	operator: string;
+	formattedDate: string;
+	formattedArrivalTime: string;
+}
+interface SelectedFlightDetails {
+	loading: boolean;
+	error: string | null;
+	selectedFlight: SelectedFlightData | null;
+}
+
+export interface FlightContextType {
+	flights: Flight[];
+	selectedFlight: Flight | null;
+	setFlightData: (flights: Flight[]) => void;
+	updateFlightFavorite: (flightId: string) => void;
+	selectFlight: (flightId: string) => void;
+	clearFlights: () => void;
+	flightsVM: FlightViewModel[];
+	selectedFlightDetails: SelectedFlightDetails;
 }

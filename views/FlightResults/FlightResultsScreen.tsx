@@ -1,10 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { FlatList, StatusBar } from 'react-native';
-import { useSelector } from 'react-redux';
 
 import { FlightCardItem } from '../../components/FlightCardItem/FlightCardItem';
-import { selectedFlightsVM } from '../../store/selectors/flightSelector';
+import { useFlightContext } from '../../contexts/FlightContext';
 import { useFlightDetailsViewModel } from '../../viewmodels/FlightDetailsViewModel';
 import { FlightResultsStyles } from './styles';
 
@@ -13,8 +12,7 @@ export const FlightResultsScreen: React.FC = () => {
 
 	const router = useRouter();
 	const { selectFlight, onUpdateFavorite } = useFlightDetailsViewModel();
-
-	const flights = useSelector(selectedFlightsVM);
+	const { flightsVM: flights } = useFlightContext();
 
 	const handleUpdateFavorite = (flightId: string) => {
 		onUpdateFavorite(flightId);
@@ -78,7 +76,7 @@ export const FlightResultsScreen: React.FC = () => {
 							durationInHours={item.durationInHours}
 							formattedTime={item.formattedTime}
 							operatingAndCode={item.operatingAndCode}
-							statusText={item.status}
+							statusText={item.statusText}
 							onSeeDetails={handleFlightPress}
 							onFavoriteToggle={() => handleUpdateFavorite(item.id)}
 						/>

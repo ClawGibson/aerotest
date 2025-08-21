@@ -1,62 +1,72 @@
 import { useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 
+import { useFlightContext } from '../contexts/FlightContext';
 import { ETrackerTabs } from '../enums/ETrackerTabs';
-import { AppDispatch, RootState } from '../store';
 import {
-	getFlightDestinations,
-	trackFlight,
-} from '../store/slices/flightSlice';
-import { setActiveTab, setSelectedDate } from '../store/slices/uiSlice';
+	useGetFlightDestinations,
+	useTrackFlight,
+	useUIManager,
+} from '../hooks/useFlightQueries';
 
 export const useFlightTrackingViewModel = () => {
-	const dispatch = useDispatch<AppDispatch>();
-
-	const { flights, loading, error } = useSelector(
-		(state: RootState) => state.flight,
-	);
-
-	const { activeTab, selectedDate } = useSelector(
-		(state: RootState) => state.ui,
-	);
+	const trackFlightMutation = useTrackFlight();
+	const getDestinationsMutation = useGetFlightDestinations();
+	const { setFlightData } = useFlightContext();
+	const { activeTab, selectedDate, setActiveTab, setSelectedDate } =
+		useUIManager();
 
 	const handleTabChange = useCallback(
 		(tab: ETrackerTabs) => {
-			dispatch(setActiveTab(tab));
+			setActiveTab(tab);
 		},
-		[dispatch],
+		[setActiveTab],
 	);
 
 	const handleDateChange = useCallback(
 		(date: string) => {
-			dispatch(setSelectedDate(date));
+			setSelectedDate(date);
 		},
-		[dispatch],
+		[setSelectedDate],
 	);
 
 	const handleFlightSearch = useCallback(
-		(flightNumber: string) => {
-			dispatch(trackFlight({ flightNumber, date: selectedDate }));
+		async (flightNumber: string) => {
+			try {
+				const result = await trackFlightMutation.mutateAsync({
+					flightNumber,
+					date: selectedDate,
+				});
+				setFlightData(result);
+			} catch (error) {
+				console.error('Flight search failed:', error);
+			}
 		},
-		[dispatch, selectedDate],
+		[trackFlightMutation, selectedDate, setFlightData],
 	);
 
 	const handleDestinationSearch = useCallback(
-		(departureCity: string, arrivalCity: string) => {
-			dispatch(
-				getFlightDestinations({
+		async (departureCity: string, arrivalCity: string) => {
+			try {
+				const result = await getDestinationsMutation.mutateAsync({
 					origin: departureCity,
 					destination: arrivalCity,
 					date: selectedDate,
-				}),
-			);
+				});
+				setFlightData(result);
+			} catch (error) {
+				console.error('Destination search failed:', error);
+			}
 		},
-		[dispatch, selectedDate],
+		[getDestinationsMutation, selectedDate, setFlightData],
 	);
+
 	return {
-		flights,
-		loading,
-		error,
+		loading:
+			trackFlightMutation.isPending || getDestinationsMutation.isPending,
+		error:
+			trackFlightMutation.error?.message ||
+			getDestinationsMutation.error?.message ||
+			null,
 		activeTab,
 		selectedDate,
 		handleTabChange,
